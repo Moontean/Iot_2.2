@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "author": "Кирилл Стоян",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-mega", "id": "mega", "top": 0.6, "left": -3.6, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -109.2,
+      "left": 99.8,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -34.45,
+      "left": 211.2,
+      "attrs": { "value": "240" }
+    }
+  ],
+  "connections": [
+    [ "mega:GND.1", "led1:C", "black", [ "v0" ] ],
+    [ "mega:7", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
