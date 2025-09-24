@@ -1,47 +1,50 @@
 #include <app_control.h>
 
-static char *commands[] = {
-    "led_on",
-    "led_off",
-};
-
-static void (*command_functions[])(const uint8_t) = {
-    led_on,
-    led_off
-};
-
 void app_control_init()
 {
     own_stdio_init(BAUDRATE);
-    led_control_init(LED_PIN);
+    led_control_init(RED_LED_PIN);
+    led_control_init(GREEN_LED_PIN);
     printf("App control is initialized.\n\r");
-    uint8_t num_commands = sizeof(commands) / sizeof(commands[0]);
-    for (uint8_t i = 0; i < num_commands; i++)
-    {
-        printf("Available command: %s\n\r", commands[i]);
-    }
-}
 
-void execute_command(const char* command)
-{
-    uint8_t num_commands = sizeof(commands) / sizeof(commands[0]);
-    for (uint8_t i = 0; i < num_commands; i++)
-    {
-        if (strcmp(command, commands[i]) == 0)
-        {
-            command_functions[i](LED_PIN);
-            printf("Executed command: %s\n\r", command);
-            return;
-        }
-    }
-    printf("Unknown command: %s\n\r", command);
 }
 
 void app_control_run()
 {
-    char str[INPUT_BUFFER_SIZE] = {0};
-    printf("Enter a string: %s\n\r");
+    uint32_t timeout = 0;
+    uint8_t input_chars_count = 0;
+    char ch = 0;
+    char input_buffer[INPUT_BUFFER_SIZE] = {0};
+    printf("\fEnter a password: ");
+    while (input_chars_count < PASSWORD_LENGTH)
+    {
+        scanf("%c", &ch);
+        if (ch == '#')
+        {
+            return;
+        }
+        
+        printf("*");
 
-    scanf("%9s", str);
-    execute_command(str);
+        input_buffer[input_chars_count] = ch;
+        input_chars_count++;
+    }
+    if (strncmp(input_buffer, PASSWORD, PASSWORD_LENGTH) == 0 )
+    {
+        printf("\n Access granted!");
+        led_on(GREEN_LED_PIN);
+        timeout = millis() + LED_GREEN_TIMEOUT;
+    }
+    else{
+        printf("\n Access denied!");
+        led_on(RED_LED_PIN);
+        timeout = millis() + LED_RED_TIMEOUT;
+    }
+
+    while (millis () < timeout)
+    {
+        
+    }
+    led_off(RED_LED_PIN);
+    led_off(GREEN_LED_PIN);
 }

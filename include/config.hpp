@@ -4,14 +4,46 @@
 #include <Arduino.h>
 
 //LED pins
-#define LED_PIN 7
+#define LED_PIN 13
+#define GREEN_LED_PIN 8
+#define RED_LED_PIN 7
 
 //Button pins
 #define BUTTON_PIN 2
+
+//Keypad pins (4x4)
+#define KEYPAD_ROWS 4
+#define KEYPAD_COLS 4
+
+enum KEYPAD_PINS
+{
+    KEYPAD_ROW_1_PIN = 39,
+    KEYPAD_ROW_2_PIN = 41,
+    KEYPAD_ROW_3_PIN = 43,
+    KEYPAD_ROW_4_PIN = 45,
+    KEYPAD_COL_1_PIN = 47,
+    KEYPAD_COL_2_PIN = 49,
+    KEYPAD_COL_3_PIN = 51,
+    KEYPAD_COL_4_PIN = 53,
+};
+
+//Password configuration
+#define PASSWORD_LENGTH 4
+#define PASSWORD "1234"
+
+//Led timeout configuration
+#define LED_GREEN_TIMEOUT 3000
+#define LED_RED_TIMEOUT 3000
 
 //Serial configuration
 #define BAUDRATE 115200
 
 #define INPUT_BUFFER_SIZE 10
 
+//lcd configuration
+#define LCD_ADDRESS 0x27
+#define LCD_COLUMNS 16
+#define LCD_ROWS 2
+
 #endif
+

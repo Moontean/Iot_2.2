@@ -1,28 +1,67 @@
 {
   "version": 1,
-  "author": "Кирилл Стоян",
+  "author": "Anonymous maker",
   "editor": "wokwi",
   "parts": [
-    { "type": "wokwi-arduino-mega", "id": "mega", "top": 0.6, "left": -3.6, "attrs": {} },
+    { "type": "wokwi-arduino-mega", "id": "mega", "top": 39, "left": -51.6, "attrs": {} },
+    { "type": "wokwi-membrane-keypad", "id": "keypad1", "top": -280.4, "left": 476, "attrs": {} },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": -185.6,
+      "left": 24.8,
+      "attrs": { "pins": "i2c" }
+    },
     {
       "type": "wokwi-led",
       "id": "led1",
-      "top": -109.2,
-      "left": 99.8,
+      "top": -10.8,
+      "left": 217.8,
+      "rotate": 90,
       "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": -49.2,
+      "left": 217.8,
+      "rotate": 90,
+      "attrs": { "color": "limegreen" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r1",
-      "top": -34.45,
-      "left": 211.2,
+      "top": 3.95,
+      "left": 144,
+      "attrs": { "value": "240" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -24.85,
+      "left": 144,
       "attrs": { "value": "240" }
     }
   ],
   "connections": [
-    [ "mega:GND.1", "led1:C", "black", [ "v0" ] ],
+    [ "mega:53", "keypad1:C4", "green", [ "v1.1", "h189.7" ] ],
+    [ "mega:51", "keypad1:C3", "green", [ "v1", "h179.95" ] ],
+    [ "lcd1:GND", "mega:GND.1", "black", [ "h-96", "v144", "h134.6" ] ],
+    [ "mega:49", "keypad1:C2", "green", [ "v1.15", "h170.2" ] ],
+    [ "mega:47", "keypad1:C1", "green", [ "v1.05", "h160.7" ] ],
+    [ "mega:45", "keypad1:R4", "green", [ "v1.2", "h151.2" ] ],
+    [ "mega:43", "keypad1:R3", "green", [ "v1.1", "h276.1" ] ],
     [ "mega:7", "r1:1", "green", [ "v0" ] ],
-    [ "r1:2", "led1:A", "green", [ "v0" ] ]
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "mega:GND.1", "led1:C", "black", [ "v-57.6", "h153.4" ] ],
+    [ "mega:GND.1", "led2:C", "black", [ "v0" ] ],
+    [ "mega:8", "r2:1", "green", [ "v0" ] ],
+    [ "r2:2", "led2:A", "green", [ "v0" ] ],
+    [ "mega:41", "keypad1:R2", "green", [ "v1.25", "h266.6" ] ],
+    [ "mega:39", "keypad1:R1", "green", [ "v1.15", "h256.6" ] ],
+    [ "lcd1:VCC", "mega:5V.1", "red", [ "h-9.6", "v96.1", "h290.2" ] ],
+    [ "lcd1:SDA", "mega:20", "green", [ "h-19.2", "v96.2", "h259.2" ] ],
+    [ "lcd1:SCL", "mega:21", "green", [ "h-28.8", "v153.9", "h278.4" ] ]
   ],
   "dependencies": {}
 }
