@@ -15,3 +15,8 @@ void led_off(const uint8_t pin)
 {
     digitalWrite(pin, LOW);
 }
+
+void led_toggle(const uint8_t pin)
+{
+    digitalWrite(pin, !digitalRead(pin));
+}

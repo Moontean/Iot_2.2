@@ -5,11 +5,14 @@
 
 //LED pins
 #define LED_PIN 13
-#define GREEN_LED_PIN 8
-#define RED_LED_PIN 7
+#define GREEN_LED_PIN 12
+#define BLUE_LED_PIN 10
 
 //Button pins
 #define BUTTON_PIN 2
+#define ON_OFF_BUTTON_PIN 6
+#define UP_BUTTON_PIN 3
+#define DOWN_BUTTON_PIN 1
 
 //Keypad pins (4x4)
 #define KEYPAD_ROWS 4
@@ -45,5 +48,13 @@ enum KEYPAD_PINS
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
 
+#define DEBOUNCE_TIME_MS 200
+
+#define DEFAULT_FREQUENCY_MS 500
+#define FIRST_TASK_OFFSET_MS 1
+#define FIRST_TASK_RECURRENCE_MS 10
+
+#define SECOND_TASK_OFFSET_MS 5
+#define SECOND_TASK_RECURRENCE_MS 7
 #endif
 

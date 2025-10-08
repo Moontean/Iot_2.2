@@ -6,5 +6,6 @@
 void led_control_init(const uint8_t pin);
 void led_on(const uint8_t pin);
 void led_off(const uint8_t pin);
+void led_toggle(const uint8_t pin);
 
 #endif

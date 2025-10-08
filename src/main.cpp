@@ -1,14 +1,12 @@
 #include <Arduino.h>
-#include <own_stdio.h>
-#include <app_control.h>
-
+#include <tasks.h>
 
 void setup()
 {
-  app_control_init();
+  tasks_init();
 }
 
 void loop()
 {
-  app_control_run();
+  // Empty loop as tasks are handled by timer interrupts
 }
