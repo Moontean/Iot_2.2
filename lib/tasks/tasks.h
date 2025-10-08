@@ -6,6 +6,9 @@
 #include <button_control.h>
 #include <config.hpp>
 #include <timer_setup.h>
+#include <Arduino_FreeRTOS.h>
+#include <semphr.h>
+#include <queue.h>
 
 void tasks_init(void);
 void tasks_update(void);
