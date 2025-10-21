@@ -103,7 +103,7 @@ void own_stdio_init(const uint32_t baudrate)
     lcd.backlight();
 
     fdev_setup_stream ( &stream,
-                        lcd_putchar,
+                        serial_putchar,
                         keypad_getchar,
                         _FDEV_SETUP_RW //указание, того, что мы хотим совершить чтение и запись
     );

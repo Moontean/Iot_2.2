@@ -6,11 +6,26 @@
 #include <button_control.h>
 #include <config.hpp>
 #include <timer_setup.h>
+// Удаляем C-linkage timer_setup, используем FreeRTOS
 #include <Arduino_FreeRTOS.h>
 #include <semphr.h>
 #include <queue.h>
 
-void tasks_init(void);
+// stdio остаётся для вывода в Serial/LCD
+#include <own_stdio.h>
+
+// Глобальные объекты синхронизации и состояния (FreeRTOS)
+extern QueueHandle_t gBytesQueue;
+extern SemaphoreHandle_t gButtonSemaphore;
+extern volatile uint32_t gN;
+
+// Инициализация FreeRTOS задач/ресурсов
+void rtos_tasks_init(void);
+
+// FreeRTOS задачи
+void task1_button_led(void* pvParameters);
+void task2_provider(void* pvParameters);
+void task3_consumer(void* pvParameters);
 void tasks_update(void);
 
 void first_task(void* args);

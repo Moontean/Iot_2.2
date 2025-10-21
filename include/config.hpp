@@ -61,5 +61,16 @@ enum KEYPAD_PINS
 
 #define SECOND_LED_ON_TIME_MS 300
 #define SECOND_LED_OFF_TIME_MS 500
+
+// Параметры FreeRTOS-задач и очереди
+#define TASK1_PERIOD_MS          10
+#define TASK2_SEND_INTERVAL_MS   50
+#define TASK2_LED_ON_MS          300
+#define TASK2_LED_OFF_MS         500
+#define TASK3_PERIOD_MS          200
+
+// Очередь provider/consumer (байты)
+#define QUEUE_LENGTH             32
+#define QUEUE_ITEM_SIZE          1
 #endif
 

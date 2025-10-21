@@ -1,79 +1,100 @@
 #include <tasks.h>
 
-static uint8_t first_led_state;
+// Глобальные объекты FreeRTOS (определения)
+QueueHandle_t gBytesQueue = nullptr;
+SemaphoreHandle_t gButtonSemaphore = nullptr;
+volatile uint32_t gN = 0;
 
-SemaphoreHandle_t button_led_semaphore;
-
-void first_task_init(void)
+// Task 1 — Кнопка и LED: период 10 мс, семафор по нажатию, LED на 1 сек
+void task1_button_led(void* pvParameters)
 {
     led_control_init(GREEN_LED_PIN);
+    led_off(GREEN_LED_PIN);
     button_control_init(ON_OFF_BUTTON_PIN);
-    first_led_state = LOW;
-    led_on(GREEN_LED_PIN);
 
-    if(button_led_semaphore == NULL)
+    TickType_t lastWake = xTaskGetTickCount();
+    TickType_t ledDeadline = 0;
+    TickType_t nextPressAllowed = 0;
+
+    for (;;)
     {
-        button_led_semaphore = xSemaphoreCreateBinary();
+        const TickType_t now = xTaskGetTickCount();
+        const uint8_t pressed = is_button_pressed(ON_OFF_BUTTON_PIN);
+
+        if (pressed && now >= nextPressAllowed)
+        {
+            xSemaphoreGive(gButtonSemaphore);
+            ledDeadline = now + pdMS_TO_TICKS(1000);
+            nextPressAllowed = now + pdMS_TO_TICKS(DEBOUNCE_TIME_MS);
+        }
+
+        if (ledDeadline && now < ledDeadline)
+        {
+            led_on(GREEN_LED_PIN);
+        }
+        else
+        {
+            led_off(GREEN_LED_PIN);
+            ledDeadline = 0;
+        }
+
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(TASK1_PERIOD_MS));
     }
 }
 
-void first_task(void* args)
-{
-    static uint8_t need_init = true;
-    static TickType_t next_time_to_check_button = 0;
-    static TickType_t led_on_duration = 0;
-    static TickType_t first_task_time = 0;
-    if (need_init)
-    {
-        first_task_init();
-        need_init = false;
-    }
-    for (;;)
-
-        if (is_button_pressed(ON_OFF_BUTTON_PIN))
-        {
-            if (xTaskGetTickCount() > next_time_to_check_button)
-            {
-                led_toggle(GREEN_LED_PIN);
-                next_time_to_check_button = xTaskGetTickCount() + DEBOUNCE_TIME_MS / portTICK_PERIOD_MS;
-
-            }
-        }
-        vTaskDelayUntil(&first_task_time, FIRST_TASK_RECURRENCE_MS / portTICK_PERIOD_MS);
-    }
-
-void second_task_init(void)
+// Task 2 — Синхронная: ждёт семафор, отправляет 1..N с интервалом 50 мс и мигает N раз
+void task2_provider(void* pvParameters)
 {
     led_control_init(BLUE_LED_PIN);
     led_off(BLUE_LED_PIN);
+
+    for (;;)
+    {
+        if (xSemaphoreTake(gButtonSemaphore, portMAX_DELAY) == pdTRUE)
+        {
+            gN++;
+
+            for (uint8_t i = 1; i <= gN && i != 0; ++i)
+            {
+                uint8_t v = i;
+                xQueueSendToFront(gBytesQueue, &v, portMAX_DELAY);
+                vTaskDelay(pdMS_TO_TICKS(TASK2_SEND_INTERVAL_MS));
+            }
+
+            uint8_t zero = 0;
+            xQueueSendToFront(gBytesQueue, &zero, portMAX_DELAY);
+
+            for (uint32_t j = 0; j < gN; ++j)
+            {
+                led_on(BLUE_LED_PIN);
+                vTaskDelay(pdMS_TO_TICKS(TASK2_LED_ON_MS));
+                led_off(BLUE_LED_PIN);
+                vTaskDelay(pdMS_TO_TICKS(TASK2_LED_OFF_MS));
+            }
+        }
+    }
 }
 
-void second_task(void* args)
+// Task 3 — Асинхронная: каждые 200 мс считывает очередь и печатает в терминал
+void task3_consumer(void* pvParameters)
 {
-    static uint8_t need_init = true;
-    static uint32_t next_time_to_toggle_led = 0;
-    static uint8_t N = 0;
-    static uint8_t led_state = LOW;
-    static uint8_t blink_count = 0;
+    TickType_t lastWake = xTaskGetTickCount();
 
-    if (need_init)
-    {
-        second_task_init();
-        need_init = false;
-    }
     for (;;)
-        if (xSemaphoreTake(button_led_semaphore, portMAX_DELAY) == pdTRUE)
+    {
+        uint8_t b;
+        while (xQueueReceive(gBytesQueue, &b, 0) == pdPASS)
         {
-            N = N + 1;
-            blink_count = N;
+            if (b == 0)
+            {
+                printf("\n");
+            }
+            else
+            {
+                printf("%u\r ", (unsigned)b);
+            }
         }
-        if  (blink_count > 0)
-        {
-            led_on(BLUE_LED_PIN);
-            vTaskDelayUntil(NULL, SECOND_LED_ON_TIME_MS / portTICK_PERIOD_MS);
-            led_off(BLUE_LED_PIN);
-            vTaskDelayUntil(NULL, SECOND_LED_OFF_TIME_MS / portTICK_PERIOD_MS);
-            blink_count--;
-        }
-        vTaskDelay(SECOND_TASK_RECURRENCE_MS / portTICK_PERIOD_MS);
+
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(TASK3_PERIOD_MS));
+    }
 }
