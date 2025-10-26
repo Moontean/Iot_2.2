@@ -3,7 +3,7 @@
 // Глобальные объекты FreeRTOS (определения)
 QueueHandle_t gBytesQueue = nullptr;
 SemaphoreHandle_t gButtonSemaphore = nullptr;
-volatile uint32_t gN = 0;
+byte gN = 0;
 
 // Task 1 — Кнопка и LED: период 10 мс, семафор по нажатию, LED на 1 сек
 void task1_button_led(void* pvParameters)
@@ -54,14 +54,14 @@ void task2_provider(void* pvParameters)
         {
             gN++;
 
-            for (uint8_t i = 1; i <= gN && i != 0; ++i)
+            for (byte i = 1; i <= gN && i != 0; ++i)
             {
-                uint8_t v = i;
+                byte v = i;
                 xQueueSendToFront(gBytesQueue, &v, portMAX_DELAY);
                 vTaskDelay(pdMS_TO_TICKS(TASK2_SEND_INTERVAL_MS));
             }
 
-            uint8_t zero = 0;
+            byte zero = 0;
             xQueueSendToFront(gBytesQueue, &zero, portMAX_DELAY);
 
             for (uint32_t j = 0; j < gN; ++j)
@@ -82,7 +82,7 @@ void task3_consumer(void* pvParameters)
 
     for (;;)
     {
-        uint8_t b;
+        byte b;
         while (xQueueReceive(gBytesQueue, &b, 0) == pdPASS)
         {
             if (b == 0)
@@ -91,7 +91,7 @@ void task3_consumer(void* pvParameters)
             }
             else
             {
-                printf("%u\r ", (unsigned)b);
+                printf("%i\r ",b);
             }
         }
 

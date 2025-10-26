@@ -16,6 +16,6 @@ void setup()
 
 void loop()
 {
-  // При запущенном планировщике сюда, как правило, не возвращаемся
+  // При запущенном планировщике сюда обычно не возвращаемся
   // Empty loop as tasks are handled by timer interrupts
 }
