@@ -104,7 +104,7 @@ void own_stdio_init(const uint32_t baudrate)
 
     fdev_setup_stream ( &stream,
                         serial_putchar,
-                        keypad_getchar,
+                        serial_getchar,
                         _FDEV_SETUP_RW //указание, того, что мы хотим совершить чтение и запись
     );
     stdout = &stream;

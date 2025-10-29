@@ -14,10 +14,11 @@
 // stdio остаётся для вывода в Serial/LCD
 #include <own_stdio.h>
 
-// Глобальные объекты синхронизации и состояния (FreeRTOS)
-extern QueueHandle_t gBytesQueue;
-extern SemaphoreHandle_t gButtonSemaphore;
-extern byte gN;
+typedef struct {
+    QueueHandle_t gBytesQueue;
+    SemaphoreHandle_t gButtonSemaphore;
+    volatile byte gN;
+} TasksData;
 // Инициализация FreeRTOS задач/ресурсов
 void rtos_tasks_init(void);
 
