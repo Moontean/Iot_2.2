@@ -1,13 +1,12 @@
-#ifndef OWN_STDIO_H
-#define OWN_STDIO_H
+#ifndef OWN_STDIO_H // Header guard for custom stdio
+#define OWN_STDIO_H // Define header guard macro
 
-#include <Arduino.h>
-#include <stdio.h>
-#include <LiquidCrystal_I2C.h>
-#include <config.hpp>
-#include <Keypad.h>
+#include <Arduino.h> // Arduino core for Serial
+#include <stdio.h> // Standard I/O definitions
+#include <LiquidCrystal_I2C.h> // LCD library for I2C display
+#include <config.hpp> // Project configuration macros (LCD address, size)
+#include <Keypad.h> // Keypad library for matrix keyboard
 
-void own_stdio_init(const uint32_t baudrate); 
+void own_stdio_init(const uint32_t baudrate); // Initialize custom stdio (Serial + LCD + keypad)
 
-
-#endif //OWN_STDIO_H
+#endif //OWN_STDIO_H // End of header guard
