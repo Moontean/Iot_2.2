@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "author": "Anonymous maker",
+  "author": "Мунтян",
   "editor": "wokwi",
   "parts": [
     { "type": "wokwi-arduino-mega", "id": "mega", "top": 173.4, "left": 25.2, "attrs": {} },
@@ -41,22 +41,6 @@
       "left": 464.3,
       "rotate": 90,
       "attrs": { "color": "green", "xray": "1" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn2",
-      "top": 220.7,
-      "left": 464.3,
-      "rotate": 90,
-      "attrs": { "color": "blue", "xray": "1" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn3",
-      "top": 307.1,
-      "left": 464.3,
-      "rotate": 90,
-      "attrs": { "color": "red", "xray": "1" }
     }
   ],
   "connections": [

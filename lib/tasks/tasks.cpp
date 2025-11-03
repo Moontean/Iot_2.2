@@ -11,7 +11,7 @@ void task1_button_led(void* pvParameters) // Task entry point with user paramete
     led_control_init(GREEN_LED_PIN); // Initialize green LED pin
     led_off(GREEN_LED_PIN); // Ensure LED is off at start
     button_control_init(ON_OFF_BUTTON_PIN); // Initialize ON/OFF button with pull-up
-    // printf("Penis1\n"); // Debug print (left unchanged)
+    // printf("something1\n"); // Debug print (left unchanged)
     TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
     TickType_t ledDeadline = 0; // Deadline when LED should turn off
     TickType_t nextPressAllowed = 0; // Debounce time threshold
@@ -48,7 +48,7 @@ void task2_provider(void* pvParameters) // Task entry point for provider
     TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
     led_control_init(BLUE_LED_PIN); // Initialize blue LED pin
     led_off(BLUE_LED_PIN); // Ensure LED off initially
-    // printf("Penis2\n"); // Debug print (left unchanged)
+    // printf("something2\n"); // Debug print (left unchanged)
     byte v; // Temporary byte to send
     byte zero = 0; // Zero marker indicating end of series
     for (;;) // Infinite task loop
@@ -59,7 +59,7 @@ void task2_provider(void* pvParameters) // Task entry point for provider
 
             for (byte i = 1; i <= tasksData->gN; ++i) // Send numbers 1..N to queue
             {
-                // printf("Penis send:%d\n",i); // Debug print (left unchanged)
+                // printf("something send:%d\n",i); // Debug print (left unchanged)
                 v = i; // Assign current value to send
                 xQueueSend(tasksData->gBytesQueue, &v, portMAX_DELAY); // Send byte to queue
                 vTaskDelay(pdMS_TO_TICKS(TASK2_SEND_INTERVAL_MS)); // Wait configured interval
@@ -83,7 +83,6 @@ void task3_consumer(void* pvParameters) // Task entry point for consumer
 {
     TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
     TickType_t lastWake = xTaskGetTickCount(); // Track periodic wake time
-    // printf("Penis\n"); // Debug print (left unchanged)
     for (;;) // Infinite task loop
     {
         byte b; // Byte read from queue
@@ -91,7 +90,7 @@ void task3_consumer(void* pvParameters) // Task entry point for consumer
         {
             if (b == 0) // If zero marker received, end of series
             {
-                // printf("Penis received zero, end of series."); // Debug print (left unchanged)
+                // printf("something received zero, end of series."); // Debug print (left unchanged)
                 printf("\n\r"); // Print newline and carriage return
             }
             else // Otherwise print received number
@@ -120,5 +119,5 @@ void rtos_tasks_init(void) // Public initialization function
     // Создание задач // Create FreeRTOS tasks
     xTaskCreate(task1_button_led, "Task1", 256, &tasksData, 1, nullptr); // Create Task1 with stack size and priority
     xTaskCreate(task2_provider,  "Task2", 256, &tasksData, 1, nullptr); // Create Task2
-    xTaskCreate(task3_consumer,  "Task3", 256, &tasksData, 1, nullptr); // Create Task3
+    xTaskCreate(task3_consumer,  "Task3", 256, &tasksData, 2, nullptr); // Create Task3
 } // End of rtos_tasks_init
