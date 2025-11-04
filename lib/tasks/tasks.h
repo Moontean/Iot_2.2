@@ -13,11 +13,18 @@
 
 // stdio остаётся для вывода в Serial/LCD // Keep stdio for Serial/LCD output
 #include <own_stdio.h> // Custom stdio abstraction
+#include <sensor_module.h> // Sensor module for data collection
 
 typedef struct { // Aggregate struct holding shared RTOS resources
     QueueHandle_t gBytesQueue; // Queue for bytes producer/consumer
     SemaphoreHandle_t gButtonSemaphore; // Binary semaphore for button events
     volatile byte gN; // Counter of series length (volatile for task access)
+    
+    // New sensor data sharing
+    QueueHandle_t gSensorDataQueue; // Queue for sensor data sharing between tasks
+    volatile uint32_t gSystemUptime; // System uptime in seconds
+    volatile uint16_t gTotalSensorReads; // Total number of sensor readings
+    volatile uint16_t gSensorErrors; // Number of sensor errors
 } TasksData; // End of TasksData definition
 // Инициализация FreeRTOS задач/ресурсов // Initialization of FreeRTOS tasks/resources
 void rtos_tasks_init(void); // Create tasks and initialize synchronization primitives
@@ -26,6 +33,11 @@ void rtos_tasks_init(void); // Create tasks and initialize synchronization primi
 void task1_button_led(void* pvParameters); // Task 1: button handling and LED control
 void task2_provider(void* pvParameters); // Task 2: producer sends sequence and blinks LED
 void task3_consumer(void* pvParameters); // Task 3: consumer reads queue and prints
+
+// New sensor-related tasks
+void task4_sensor_reader(void* pvParameters); // Task 4: periodic sensor data collection
+void task5_system_monitor(void* pvParameters); // Task 5: system status reporting every 500ms
+
 void tasks_update(void); // Optional periodic update (not implemented here)
 
 void first_task(void* args); // Placeholder task entry

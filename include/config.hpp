@@ -72,5 +72,27 @@ enum KEYPAD_PINS // Enumeration to define keypad pin assignments
 // Provider/consumer queue parameters (bytes)
 #define QUEUE_LENGTH             32 // Define queue length as 32 items
 #define QUEUE_ITEM_SIZE          1 // Define queue item size as 1 byte
+
+// Sensor module configuration - NTC Temperature Sensor (Wokwi)
+#define SENSOR_ANALOG_PIN        A0 // Define analog pin for NTC temperature sensor
+#define SENSOR_READ_PERIOD_MS    250 // Define sensor reading period as 250 milliseconds
+#define SENSOR_DISPLAY_PERIOD_MS 500 // Define display update period as 500 milliseconds
+#define SENSOR_MIN_VOLTAGE       0.1f // Minimum expected sensor voltage (avoid division by zero)
+#define SENSOR_MAX_VOLTAGE       4.9f // Maximum expected sensor voltage
+#define SENSOR_MAX_ERRORS        5 // Maximum consecutive sensor errors before marking as failed
+#define SENSOR_NAME              "NTC Temperature Sensor" // Sensor name for reports
+
+// NTC Temperature sensor specific configuration (Wokwi NTC)
+#define TEMP_SENSOR_BETA         3950.0f // Beta coefficient for NTC thermistor (Wokwi default)
+#define TEMP_SENSOR_R25          10000.0f // Resistance at 25°C (10kΩ for Wokwi NTC)
+#define TEMP_SENSOR_T0           298.15f // Reference temperature in Kelvin (25°C = 298.15K)
+#define TEMP_PULLUP_RESISTOR     10000.0f // Pull-up resistor value (10kΩ internal in Wokwi NTC)
+#define TEMP_MIN_CELSIUS         -40.0f // Minimum expected temperature in Celsius
+#define TEMP_MAX_CELSIUS         125.0f // Maximum expected temperature in Celsius
+
+// System monitoring task configuration  
+#define SYSTEM_MONITOR_PERIOD_MS 500 // Define system monitoring period as 500 milliseconds
+#define REPORT_BUFFER_SIZE       128 // Define report buffer size as 128 characters
+
 #endif // End of header guard
 

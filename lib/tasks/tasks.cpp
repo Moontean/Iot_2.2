@@ -103,11 +103,108 @@ void task3_consumer(void* pvParameters) // Task entry point for consumer
     } // End of infinite loop
 } // End of task3_consumer
 
+// Task 4 — Sensor Reader: periodic data collection using vTaskDelayUntil
+void task4_sensor_reader(void* pvParameters) // Task entry point for sensor reading
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    
+    // Initialize temperature sensor configuration
+    sensor_config_t sensor_config = {
+        .pin = SENSOR_ANALOG_PIN,
+        .type = SENSOR_TYPE_ANALOG,
+        .min_voltage = SENSOR_MIN_VOLTAGE,
+        .max_voltage = SENSOR_MAX_VOLTAGE,
+        .max_errors = SENSOR_MAX_ERRORS,
+        .name = SENSOR_NAME
+    };
+    sensor_module_init(&sensor_config);
+    
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
+    
+    for (;;) // Infinite task loop
+    {
+        // Read sensor data
+        sensor_data_t data = sensor_read_data();
+        tasksData->gTotalSensorReads++; // Increment total reads counter
+        
+        if (data.status != SENSOR_STATUS_OK) {
+            tasksData->gSensorErrors++; // Increment error counter
+        }
+        
+        // Send sensor data to display task via queue (non-blocking)
+        xQueueSend(tasksData->gSensorDataQueue, &data, 0);
+        
+        // Use vTaskDelayUntil for precise periodic timing
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(SENSOR_READ_PERIOD_MS));
+    } // End of infinite loop
+} // End of task4_sensor_reader
+
+// Task 5 — System Monitor: display system status every 500ms using STDIO
+void task5_system_monitor(void* pvParameters) // Task entry point for system monitoring
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
+    char report_buffer[REPORT_BUFFER_SIZE]; // Buffer for formatted reports
+    sensor_data_t latest_sensor_data; // Latest sensor data
+    bool has_sensor_data = false; // Flag indicating if we have sensor data
+    
+    for (;;) // Infinite task loop
+    {
+        // Update system uptime (approximation)
+        tasksData->gSystemUptime = xTaskGetTickCount() / configTICK_RATE_HZ;
+        
+        // Try to get latest sensor data (non-blocking)
+        while (xQueueReceive(tasksData->gSensorDataQueue, &latest_sensor_data, 0) == pdTRUE) {
+            has_sensor_data = true; // Mark that we have fresh data
+        }
+        
+        // Generate and print system status report
+        printf("\n\r==== SYSTEM STATUS REPORT ====\n\r");
+        printf("Uptime: %lu seconds\n\r", tasksData->gSystemUptime);
+        printf("Button presses (N): %d\n\r", tasksData->gN);
+        printf("Total sensor reads: %d\n\r", tasksData->gTotalSensorReads);
+        printf("Sensor errors: %d\n\r", tasksData->gSensorErrors);
+        
+        if (has_sensor_data) {
+            // Generate sensor report
+            sensor_get_report(report_buffer, sizeof(report_buffer));
+            printf("Latest sensor: %s\n\r", report_buffer);
+            
+            // Calculate and display additional metrics
+            float temperature = latest_sensor_data.physical_value; // Now contains temperature in Celsius
+            float percentage = sensor_temperature_to_percentage(temperature);
+            
+            // Convert to integers for Arduino printf compatibility
+            int temp_int = (int)(temperature * 10.0f);
+            int perc_int = (int)(percentage * 10.0f);
+            
+            // Debug information
+            int voltage_mv = (int)(sensor_raw_to_voltage(latest_sensor_data.raw_value) * 1000.0f);
+            printf("DEBUG: RAW=%d, V=%dmV\n\r", latest_sensor_data.raw_value, voltage_mv);
+            
+            printf("Temperature: %d.%d°C (%d.%d%%)\n\r", 
+                   temp_int / 10, temp_int % 10,
+                   perc_int / 10, perc_int % 10);
+        } else {
+            printf("No sensor data available\n\r");
+        }
+        
+        // printf("Free heap: %d bytes\n\r", xPortGetFreeHeapSize()); // Not available in this FreeRTOS version
+        printf("===============================\n\r");
+        
+        // Use vTaskDelayUntil for precise 500ms timing
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(SYSTEM_MONITOR_PERIOD_MS));
+    } // End of infinite loop
+} // End of task5_system_monitor
+
 // Инициализация семафора, очереди и создание задач FreeRTOS // Initialize semaphore, queue, and create tasks
 void rtos_tasks_init(void) // Public initialization function
 {
     static TasksData tasksData; // Static storage for tasks shared data
     tasksData.gN = 0; // Initialize series counter to zero
+    tasksData.gSystemUptime = 0; // Initialize uptime counter
+    tasksData.gTotalSensorReads = 0; // Initialize sensor reads counter
+    tasksData.gSensorErrors = 0; // Initialize sensor errors counter
     
     // Бинарный семафор: событие от Task1 к Task2 // Binary semaphore signals from Task1 to Task2
     tasksData.gButtonSemaphore = xSemaphoreCreateBinary(); // Create binary semaphore
@@ -115,9 +212,16 @@ void rtos_tasks_init(void) // Public initialization function
     // Очередь сообщений: каждый элемент — ByteSeriesMsg // Message queue: items are bytes
     // ВАЖНО: длину очереди НЕ меняем (берётся из существующего макроса/конфига) // IMPORTANT: keep queue length from config
     tasksData.gBytesQueue = xQueueCreate(QUEUE_LENGTH, sizeof(byte)); // Create queue with fixed length
+    
+    // New queue for sensor data sharing
+    tasksData.gSensorDataQueue = xQueueCreate(8, sizeof(sensor_data_t)); // Create sensor data queue
 
     // Создание задач // Create FreeRTOS tasks
     xTaskCreate(task1_button_led, "Task1", 256, &tasksData, 1, nullptr); // Create Task1 with stack size and priority
     xTaskCreate(task2_provider,  "Task2", 256, &tasksData, 1, nullptr); // Create Task2
     xTaskCreate(task3_consumer,  "Task3", 256, &tasksData, 2, nullptr); // Create Task3
+    
+    // Create new sensor-related tasks
+    xTaskCreate(task4_sensor_reader, "SensorRead", 320, &tasksData, 2, nullptr); // Create sensor reader task
+    xTaskCreate(task5_system_monitor, "SysMonitor", 384, &tasksData, 1, nullptr); // Create system monitor task
 } // End of rtos_tasks_init
