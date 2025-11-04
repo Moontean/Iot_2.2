@@ -3,59 +3,22 @@
   "author": "Мунтян",
   "editor": "wokwi",
   "parts": [
-    { "type": "wokwi-arduino-mega", "id": "mega", "top": 173.4, "left": 25.2, "attrs": {} },
+    { "type": "wokwi-arduino-mega", "id": "mega", "top": 180, "left": 20, "attrs": {} },
     {
-      "type": "wokwi-led",
-      "id": "led1",
-      "top": 27.6,
-      "left": 467.4,
-      "rotate": 90,
-      "attrs": { "color": "limegreen" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led2",
-      "top": 75.6,
-      "left": 477,
-      "rotate": 90,
-      "attrs": { "color": "blue" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 51.95,
-      "left": 278.4,
-      "attrs": { "value": "240" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r2",
-      "top": 99.95,
-      "left": 297.6,
-      "attrs": { "value": "240" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn1",
-      "top": 134.3,
-      "left": 464.3,
-      "rotate": 90,
-      "attrs": { "color": "green", "xray": "1" }
+      "type": "wokwi-ntc-temperature-sensor",
+      "id": "ntc1",
+      "top": 200,
+      "left": 320,
+      "attrs": { "temperature": "25", "beta": "3950", "r25": "10000" }
     }
   ],
   "connections": [
-    [ "mega:12", "r1:1", "green", [ "v0" ] ],
-    [ "r1:2", "led1:A", "green", [ "v0" ] ],
-    [ "mega:GND.1", "led2:C", "black", [ "v0" ] ],
-    [ "mega:10", "r2:1", "green", [ "v0" ] ],
-    [ "r2:2", "led2:A", "green", [ "v0" ] ],
-    [ "mega:GND.1", "led1:C", "black", [ "v0" ] ],
-    [ "mega:6", "btn1:2.r", "green", [ "v-38.4", "h235.6", "v57.6", "h28.8", "v-9.8" ] ],
-    [ "mega:3", "btn2:2.r", "green", [ "v-28.8", "h197.5", "v134.4", "h38.6" ] ],
-    [ "mega:1", "btn3:2.r", "green", [ "v-19.2", "h168.9", "v211.2", "h48" ] ],
-    [ "mega:GND.2", "btn3:1.l", "black", [ "v54.9", "h338.15", "v-115.2" ] ],
-    [ "mega:GND.2", "btn2:1.l", "black", [ "v74.1", "h347.75", "v-220.8" ] ],
-    [ "mega:GND.2", "btn1:1.l", "black", [ "v83.7", "h357.35", "v-316.8" ] ]
+    [ "ntc1:VCC", "bb:tp25", "red", [ "v0" ] ],
+    [ "ntc1:GND", "bb:tn20", "black", [ "v0" ] ],
+    [ "ntc1:OUT", "mega:A0", "blue", [ "v0" ] ],
+    
+    [ "bb:bp25", "mega:5V", "red", [ "v0" ] ],
+    [ "bb:bn25", "mega:GND.1", "black", [ "v0" ] ]
   ],
   "dependencies": {}
 }
