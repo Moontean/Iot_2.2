@@ -1,4 +1,7 @@
 #include <tasks.h> // Include task declarations and dependencies
+#include <sensor_module.h> // NTC temperature sensor module
+#include <ultrasonic_sensor.h> // HC-SR04 ultrasonic sensor module
+#include <signal_processing.h> // Digital signal processing filters
 
 // Глобальные объекты FreeRTOS (определения) // Global FreeRTOS objects (definitions)
 // (All handles are stored inside TasksData passed to tasks)
@@ -120,4 +123,111 @@ void rtos_tasks_init(void) // Public initialization function
     xTaskCreate(task1_button_led, "Task1", 256, &tasksData, 1, nullptr); // Create Task1 with stack size and priority
     xTaskCreate(task2_provider,  "Task2", 256, &tasksData, 1, nullptr); // Create Task2
     xTaskCreate(task3_consumer,  "Task3", 256, &tasksData, 2, nullptr); // Create Task3
+    xTaskCreate(task4_sensor_reader, "Task4", 512, &tasksData, 2, nullptr); // Create Task4 for NTC sensor
+    xTaskCreate(task5_sensor_reporter, "Task5", 512, &tasksData, 1, nullptr); // Create Task5 for sensor reports
+    xTaskCreate(task6_ultrasonic_reader, "Task6", 512, &tasksData, 2, nullptr); // Create Task6 for HC-SR04
+    xTaskCreate(task7_signal_processor, "Task7", 512, &tasksData, 3, nullptr); // Create Task7 for signal processing
 } // End of rtos_tasks_init
+
+// Task 4 — NTC Temperature Sensor Reader: period 500ms with digital filtering // Task 4: NTC sensor with signal processing
+void task4_sensor_reader(void* pvParameters) // Task entry point for sensor reading
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    // Initialize sensor with default config
+    sensor_config_t sensor_cfg;
+    sensor_cfg.name = "NTC_Temp";
+    sensor_cfg.pin = TEMPERATURE_SENSOR_PIN;
+    sensor_cfg.type = SENSOR_TYPE_ANALOG;
+    sensor_cfg.min_voltage = 0.5f;
+    sensor_cfg.max_voltage = 4.5f;
+    sensor_cfg.max_errors = 10;
+    sensor_module_init(&sensor_cfg); // Initialize NTC temperature sensor
+    sensor_init_filters(); // Initialize digital filters
+    
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
+    // Timing offset for Task 4: 0ms (base timing reference)
+    
+    for (;;) // Infinite task loop
+    {
+        sensor_read_with_filtering(); // Read NTC temperature sensor with filtering
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(SENSOR_READ_PERIOD_MS)); // Periodic delay for 500ms
+    } // End of infinite loop
+} // End of task4_sensor_reader
+
+// Task 5 — Sensor Report Publisher: period 2000ms with enhanced formatting // Task 5: sensor data reporting
+void task5_sensor_reporter(void* pvParameters) // Task entry point for sensor reporting
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
+    // Timing offset for Task 5: 100ms after Task 4
+    vTaskDelay(pdMS_TO_TICKS(100)); 
+    lastWake = xTaskGetTickCount(); // Reset wake time after offset
+    
+    char report_buffer[256]; // Buffer for sensor report string
+    
+    for (;;) // Infinite task loop
+    {
+        sensor_get_report(report_buffer, sizeof(report_buffer)); // Get formatted sensor report
+        printf("SENSOR: %s\n", report_buffer); // Print sensor data with filtering info
+        
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(SENSOR_REPORT_PERIOD_MS)); // Periodic delay for 2000ms
+    } // End of infinite loop
+} // End of task5_sensor_reporter
+
+// Task 6 — HC-SR04 Ultrasonic Distance Sensor: period 300ms with filtering // Task 6: ultrasonic distance measurement
+void task6_ultrasonic_reader(void* pvParameters) // Task entry point for ultrasonic sensor
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    // Initialize ultrasonic sensor with config
+    ultrasonic_config_t ultrasonic_cfg;
+    ultrasonic_cfg.name = "HC_SR04";
+    ultrasonic_cfg.trigger_pin = ULTRASONIC_TRIGGER_PIN;
+    ultrasonic_cfg.echo_pin = ULTRASONIC_ECHO_PIN;
+    ultrasonic_cfg.max_distance_cm = 400;
+    ultrasonic_cfg.timeout_us = 30000;
+    ultrasonic_init(&ultrasonic_cfg); // Initialize HC-SR04 ultrasonic sensor
+    
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling  
+    // Timing offset for Task 6: 200ms after Task 4
+    vTaskDelay(pdMS_TO_TICKS(200));
+    lastWake = xTaskGetTickCount(); // Reset wake time after offset
+    
+    char distance_buffer[128]; // Buffer for distance report
+    
+    for (;;) // Infinite task loop
+    {
+        ultrasonic_data_t distance_data = ultrasonic_read_data(); // Read ultrasonic data
+        
+        ultrasonic_get_report(distance_buffer, sizeof(distance_buffer)); // Get formatted distance report
+        printf("ULTRASONIC: %s\n", distance_buffer); // Print distance data
+        
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(ULTRASONIC_READ_PERIOD_MS)); // Periodic delay for 300ms
+    } // End of infinite loop
+} // End of task6_ultrasonic_reader
+
+// Task 7 — Signal Processing Coordinator: period 1000ms, manages filter states // Task 7: signal processing management
+void task7_signal_processor(void* pvParameters) // Task entry point for signal processing
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    
+    TickType_t lastWake = xTaskGetTickCount(); // Get current tick for periodic scheduling
+    // Timing offset for Task 7: 300ms after Task 4  
+    vTaskDelay(pdMS_TO_TICKS(300));
+    lastWake = xTaskGetTickCount(); // Reset wake time after offset
+    
+    uint32_t processing_cycles = 0; // Counter for processing cycles
+    
+    for (;;) // Infinite task loop
+    {
+        processing_cycles++; // Increment cycle counter
+        
+        // Periodic status report of signal processing system
+        printf("SIGNAL_PROC: Cycle %lu - Salt&Pepper: %s, WeightedMA: %s\n", 
+               processing_cycles,
+               ENABLE_SALT_PEPPER_FILTER ? "ON" : "OFF",
+               ENABLE_MOVING_AVERAGE ? "ON" : "OFF");
+        
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(SIGNAL_PROCESSING_PERIOD_MS)); // Periodic delay for 1000ms
+    } // End of infinite loop
+} // End of task7_signal_processor
