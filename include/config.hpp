@@ -98,11 +98,36 @@ enum KEYPAD_PINS // Enumeration to define keypad pin assignments
 #define TEMP_MIN_CELSIUS        -40.0f      // Минимальная температура диапазона
 #define TEMP_MAX_CELSIUS        125.0f      // Максимальная температура диапазона
 
+// === ЦИФРОВЫЕ ФИЛЬТРЫ И КОНДИЦИОНИРОВАНИЕ СИГНАЛА ===
+#define ENABLE_SALT_PEPPER_FILTER    1      // Включить фильтр "соль и перец" (медианный)
+#define ENABLE_MOVING_AVERAGE        1      // Включить взвешенный фильтр усреднения
+#define ENABLE_SIGNAL_SATURATION     1      // Включить насыщение сигнала
+
+// Параметры фильтра "соль и перец" (медианный фильтр)
+#define MEDIAN_FILTER_SIZE          5       // Размер окна медианного фильтра (должен быть нечетным)
+
+// Параметры взвешенного фильтра усреднения
+#define MOVING_AVERAGE_SIZE         8       // Размер окна взвешенного усреднения
+#define WEIGHT_DECAY_FACTOR         0.8f    // Фактор затухания для экспоненциальных весов
+
+// Параметры насыщения сигнала
+#define ADC_MIN_SATURATION          50      // Минимальное значение ADC (шумовой порог)
+#define ADC_MAX_SATURATION          1000    // Максимальное значение ADC (защита от переполнения)
+#define VOLTAGE_MIN_SATURATION      0.2f    // Минимальное напряжение (В)
+#define VOLTAGE_MAX_SATURATION      4.8f    // Максимальное напряжение (В)
+
+// (Ultrasonic sensor configuration removed: NTC-only implementation)
+
 // === ПЕРИОДЫ ЗАДАЧ FreeRTOS ===
 #define SENSOR_READ_PERIOD_MS       500     // Период чтения NTC датчика (500мс)
-#define SENSOR_REPORT_PERIOD_MS     2000    // Период отчетов датчика (2сек)
-#define ULTRASONIC_READ_PERIOD_MS   300     // Период чтения ультразвукового датчика
-#define SIGNAL_PROCESSING_PERIOD_MS 1000    // Период обработки сигналов (1сек)
+#define SENSOR_REPORT_PERIOD_MS     500     // ОБЯЗАТЕЛЬНЫЙ период отчетности (500мс по заданию)
+#define SIGNAL_PROCESSING_PERIOD_MS 1000    // Период дополнительной обработки сигналов (if needed)
+
+// Задержки запуска и смещения задач (для правильного планирования)
+#define TASK_BASE_STARTUP_DELAY     50      // Базовая задержка запуска всех задач
+#define TASK4_STARTUP_OFFSET        0       // Задача чтения NTC - без смещения (опорная)
+#define TASK5_STARTUP_OFFSET        100     // Задача отчетности - смещение 100мс
+// NTC-only: remove ultrasonic/coordinator offsets
 
 // === ЗАДЕРЖКИ И СМЕЩЕНИЯ ЗАДАЧ ===
 #define TASK_STARTUP_DELAY_MS       50   // Базовая задержка запуска задач

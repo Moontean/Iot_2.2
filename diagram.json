@@ -48,14 +48,8 @@
       "top": 230.4,
       "left": 460.8,
       "attrs": {}
-    },
-    {
-      "type": "wokwi-hc-sr04",
-      "id": "ultrasonic1",
-      "top": 288,
-      "left": 460.8,
-      "attrs": {}
     }
+    
   ],
   "connections": [
     [ "mega:12", "r1:1", "green", [ "v0" ] ],
@@ -68,11 +62,8 @@
     [ "mega:GND.2", "btn1:1.l", "black", [ "v83.7", "h357.35", "v-316.8" ] ],
     [ "mega:A0", "ntc1:OUT", "yellow", [ "v0" ] ],
     [ "mega:5V", "ntc1:VCC", "red", [ "v0" ] ],
-    [ "mega:GND.3", "ntc1:GND", "black", [ "v0" ] ],
-    [ "mega:7", "ultrasonic1:TRIG", "orange", [ "v0" ] ],
-    [ "mega:8", "ultrasonic1:ECHO", "cyan", [ "v0" ] ],
-    [ "mega:5V", "ultrasonic1:VCC", "red", [ "v0" ] ],
-    [ "mega:GND.3", "ultrasonic1:GND", "black", [ "v0" ] ]
+    [ "mega:GND.3", "ntc1:GND", "black", [ "v0" ] ]
+    
   ],
   "dependencies": {}
 }

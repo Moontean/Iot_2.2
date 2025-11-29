@@ -242,13 +242,12 @@ void sensor_get_report(char* buffer, size_t buffer_size)
     int temp_filt_int = (int)(filtered_temperature * 10.0f);
     int perc_int = (int)(percentage * 10.0f);
     
-    snprintf(buffer, buffer_size, 
-        "%s: RAW=%d->%d T_raw=%d.%d°C T_filt=%d.%d°C (%d.%d%%) [%s] [ERR:%d] [TIME:%lu]",
-        g_sensor_config.name,
-        g_sensor_data.raw_value, g_sensor_data.filtered_raw,
-        temp_raw_int / 10, temp_raw_int % 10,           // Raw temperature
-        temp_filt_int / 10, temp_filt_int % 10,         // Filtered temperature
-        perc_int / 10, perc_int % 10,                   // Percentage
+    snprintf(buffer, buffer_size,
+        "NTC: RAW %d | TEMP %d.%d°C -> %d.%d°C | %d.%d%% | %s | err=%d | t=%lums",
+        g_sensor_data.raw_value,
+        temp_raw_int / 10, temp_raw_int % 10,
+        temp_filt_int / 10, temp_filt_int % 10,
+        perc_int / 10, perc_int % 10,
         status_str,
         g_sensor_data.error_count,
         g_sensor_data.timestamp_ms

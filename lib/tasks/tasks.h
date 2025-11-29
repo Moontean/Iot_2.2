@@ -13,6 +13,8 @@
 
 // stdio остаётся для вывода в Serial/LCD // Keep stdio for Serial/LCD output
 #include <own_stdio.h> // Custom stdio abstraction
+#include <sensor_module.h> // NTC temperature sensor module
+#include <signal_processing.h> // Digital signal processing filters
 
 typedef struct { // Aggregate struct holding shared RTOS resources
     QueueHandle_t gBytesQueue; // Queue for bytes producer/consumer
@@ -26,15 +28,19 @@ void rtos_tasks_init(void); // Create tasks and initialize synchronization primi
 void task1_button_led(void* pvParameters); // Task 1: button handling and LED control
 void task2_provider(void* pvParameters); // Task 2: producer sends sequence and blinks LED
 void task3_consumer(void* pvParameters); // Task 3: consumer reads queue and prints
-void task4_sensor_reader(void* pvParameters); // Task 4: NTC temperature sensor reading
-void task5_sensor_reporter(void* pvParameters); // Task 5: sensor data reporting
-void task6_ultrasonic_reader(void* pvParameters); // Task 6: HC-SR04 ultrasonic sensor
-void task7_signal_processor(void* pvParameters); // Task 7: signal processing coordination
+
+// === ENHANCED TASKS FOR DIGITAL SIGNAL PROCESSING (NTC only) ===
+void task4_ntc_sensor_reader(void* pvParameters); // Task 4: NTC temperature sensor with filtering
+void task5_system_status_reporter(void* pvParameters); // Task 5: System status reports (500ms as required)
+
 void tasks_update(void); // Optional periodic update (not implemented here)
 
 void first_task(void* args); // Placeholder task entry
 void second_task(void* args); // Placeholder task entry
 void third_task(void* args); // Placeholder task entry
 void idle_task(void* args); // Placeholder idle task
+
+// === ENHANCED INITIALIZATION FUNCTIONS ===
+void rtos_tasks_init_enhanced(void); // Initialize enhanced system (NTC only)
 
 #endif //TASKS_H // End of header guard
