@@ -1,61 +1,29 @@
 {
   "version": 1,
-  "author": "Мунтян",
+  "author": "Саша Мунтян",
   "editor": "wokwi",
   "parts": [
-    { "type": "wokwi-arduino-mega", "id": "mega", "top": 173.4, "left": 25.2, "attrs": {} },
-    {
-      "type": "wokwi-led",
-      "id": "led1",
-      "top": 27.6,
-      "left": 467.4,
-      "rotate": 90,
-      "attrs": { "color": "limegreen" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led2",
-      "top": 75.6,
-      "left": 477,
-      "rotate": 90,
-      "attrs": { "color": "blue" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 51.95,
-      "left": 278.4,
-      "attrs": { "value": "240" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r2",
-      "top": 99.95,
-      "left": 297.6,
-      "attrs": { "value": "240" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn1",
-      "top": 134.3,
-      "left": 464.3,
-      "rotate": 90,
-      "attrs": { "color": "green", "xray": "1" }
-    }
+    { "type": "wokwi-arduino-mega", "id": "mega", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": -100, "left": 300, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd1", "top": -150, "left": 0, "attrs": { "pins": "i2c" } },
+    { "type": "wokwi-membrane-keypad", "id": "keypad1", "top": 100, "left": 400, "attrs": {} }
   ],
   "connections": [
-    [ "mega:12", "r1:1", "green", [ "v0" ] ],
-    [ "r1:2", "led1:A", "green", [ "v0" ] ],
-    [ "mega:GND.1", "led2:C", "black", [ "v0" ] ],
-    [ "mega:10", "r2:1", "green", [ "v0" ] ],
-    [ "r2:2", "led2:A", "green", [ "v0" ] ],
-    [ "mega:GND.1", "led1:C", "black", [ "v0" ] ],
-    [ "mega:6", "btn1:2.r", "green", [ "v-38.4", "h235.6", "v57.6", "h28.8", "v-9.8" ] ],
-    [ "mega:3", "btn2:2.r", "green", [ "v-28.8", "h197.5", "v134.4", "h38.6" ] ],
-    [ "mega:1", "btn3:2.r", "green", [ "v-19.2", "h168.9", "v211.2", "h48" ] ],
-    [ "mega:GND.2", "btn3:1.l", "black", [ "v54.9", "h338.15", "v-115.2" ] ],
-    [ "mega:GND.2", "btn2:1.l", "black", [ "v74.1", "h347.75", "v-220.8" ] ],
-    [ "mega:GND.2", "btn1:1.l", "black", [ "v83.7", "h357.35", "v-316.8" ] ]
+    [ "mega:22", "relay1:IN", "green", [ "v0" ] ],
+    [ "mega:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "mega:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "mega:20", "lcd1:SDA", "blue", [ "v0" ] ],
+    [ "mega:21", "lcd1:SCL", "green", [ "v0" ] ],
+    [ "mega:5V", "lcd1:VCC", "red", [ "v0" ] ],
+    [ "mega:GND", "lcd1:GND", "black", [ "v0" ] ],
+    [ "mega:23", "keypad1:R1", "purple", [ "v0" ] ],
+    [ "mega:24", "keypad1:R2", "purple", [ "v0" ] ],
+    [ "mega:25", "keypad1:R3", "purple", [ "v0" ] ],
+    [ "mega:26", "keypad1:R4", "purple", [ "v0" ] ],
+    [ "mega:27", "keypad1:C1", "orange", [ "v0" ] ],
+    [ "mega:28", "keypad1:C2", "orange", [ "v0" ] ],
+    [ "mega:29", "keypad1:C3", "orange", [ "v0" ] ],
+    [ "mega:30", "keypad1:C4", "orange", [ "v0" ] ]
   ],
   "dependencies": {}
 }

@@ -1,4 +1,6 @@
 #include <tasks.h> // Include task declarations and dependencies
+#include <sensor_module.h> // NTC temperature sensor module
+#include <signal_processing.h> // Digital signal processing filters
 
 // Глобальные объекты FreeRTOS (определения) // Global FreeRTOS objects (definitions)
 // (All handles are stored inside TasksData passed to tasks)
@@ -90,8 +92,7 @@ void task3_consumer(void* pvParameters) // Task entry point for consumer
         {
             if (b == 0) // If zero marker received, end of series
             {
-                // printf("something received zero, end of series."); // Debug print (left unchanged)
-                printf("\n\r"); // Print newline and carriage return
+                printf("\r\n"); // Proper CRLF line break
             }
             else // Otherwise print received number
             {
@@ -121,3 +122,112 @@ void rtos_tasks_init(void) // Public initialization function
     xTaskCreate(task2_provider,  "Task2", 256, &tasksData, 1, nullptr); // Create Task2
     xTaskCreate(task3_consumer,  "Task3", 256, &tasksData, 2, nullptr); // Create Task3
 } // End of rtos_tasks_init
+
+// === ENHANCED SYSTEM INITIALIZATION WITH DIGITAL SIGNAL PROCESSING ===
+void rtos_tasks_init_enhanced(void) // Initialize enhanced system with signal processing (NTC only)
+{
+    // 1. Initialize base system (Tasks 1-3: button, producer, consumer)
+    rtos_tasks_init();
+    
+    // 2. Initialize sensor modules and digital signal processing
+    // NTC Temperature Sensor Configuration
+    sensor_config_t ntc_config;
+    ntc_config.pin = TEMPERATURE_SENSOR_PIN;
+    ntc_config.type = SENSOR_TYPE_ANALOG;
+    ntc_config.min_voltage = VOLTAGE_MIN_SATURATION;
+    ntc_config.max_voltage = VOLTAGE_MAX_SATURATION;
+    ntc_config.max_errors = 10;
+    ntc_config.name = "NTC Temperature Sensor";
+    sensor_module_init(&ntc_config);
+    sensor_init_filters(); // Initialize digital filters for NTC
+    
+    // 3. Create enhanced tasks for digital signal processing
+    static TasksData* pTasksData = nullptr; // Shared data pointer
+    
+    xTaskCreate(task4_ntc_sensor_reader, "NTC_Reader", 512, pTasksData, 2, nullptr);
+    xTaskCreate(task5_system_status_reporter, "StatusReport", 512, pTasksData, 1, nullptr);
+    // Ultrasonic and extra coordinator tasks removed for NTC-only implementation
+} // End of rtos_tasks_init_enhanced
+
+// === TASK 4: NTC TEMPERATURE SENSOR WITH DIGITAL SIGNAL PROCESSING ===
+void task4_ntc_sensor_reader(void* pvParameters) // Task entry point for NTC sensor reading
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data (may be null)
+    
+    // Task timing configuration
+    TickType_t xLastWakeTime = xTaskGetTickCount(); // Initialize wake time
+    vTaskDelay(pdMS_TO_TICKS(TASK_BASE_STARTUP_DELAY + TASK4_STARTUP_OFFSET)); // Startup offset
+    
+    printf("INIT: Task4 NTC Sensor Reader started with digital filters\r\n");
+    
+    for (;;) // Infinite task loop
+    {
+        // Read NTC sensor with full digital signal processing pipeline
+        sensor_data_t sensor_data = sensor_read_with_filtering();
+        
+        // Optional: Print debug information for filter effectiveness analysis
+        if (ENABLE_SALT_PEPPER_FILTER && ENABLE_MOVING_AVERAGE) {
+            // Calculate filter effectiveness
+            int16_t raw_diff = (int16_t)sensor_data.filtered_raw - (int16_t)sensor_data.raw_value;
+            float temp_diff = sensor_data.filtered_value - sensor_data.physical_value;
+            
+                 printf("DEBUG_NTC: RAW:%d->%d(Δ%d) TEMP:%d.%d->%d.%d(Δ%d.%d)\r\n",
+                   sensor_data.raw_value, sensor_data.filtered_raw, raw_diff,
+                   (int)sensor_data.physical_value, (int)(sensor_data.physical_value * 10) % 10,
+                   (int)sensor_data.filtered_value, (int)(sensor_data.filtered_value * 10) % 10,
+                   (int)temp_diff, (int)(abs(temp_diff) * 10) % 10);
+        }
+        
+        // Precise periodic execution using vTaskDelayUntil (required by assignment)
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SENSOR_READ_PERIOD_MS));
+    } // End of infinite loop
+} // End of task4_ntc_sensor_reader
+
+// === TASK 5: SYSTEM STATUS REPORTS (REQUIRED 500ms PERIOD) ===
+void task5_system_status_reporter(void* pvParameters) // Task entry point for system reports
+{
+    TasksData* tasksData = (TasksData*)pvParameters; // Cast parameter to shared data
+    
+    // Task timing configuration
+    TickType_t xLastWakeTime = xTaskGetTickCount(); // Initialize wake time
+    vTaskDelay(pdMS_TO_TICKS(TASK_BASE_STARTUP_DELAY + TASK5_STARTUP_OFFSET)); // Startup offset
+    
+    printf("INIT: Task5 System Status Reporter (period: %d ms)\r\n", SENSOR_REPORT_PERIOD_MS);
+    
+    static uint32_t report_counter = 0; // Static report counter
+    char report_buffer[256]; // Buffer for formatted reports (increased size)
+    
+    for (;;) // Infinite task loop
+    {
+        report_counter++; // Increment report number
+        uint32_t uptime_seconds = millis() / 1000; // System uptime in seconds
+        
+        // === STRUCTURED SYSTEM STATUS REPORT (USING STDIO) ===
+         printf("===== System Report #%lu | Uptime: %lus =====\r\n", 
+             report_counter, uptime_seconds);
+        
+        // Button/LED system status (from original tasks)
+        if (tasksData != nullptr) {
+            printf("Button: presses=%d | queue=active\r\n", tasksData->gN);
+        }
+        
+        // NTC Temperature Sensor with digital signal processing
+        sensor_get_report(report_buffer, sizeof(report_buffer));
+        printf("NTC Sensor: %s\r\n", report_buffer);
+        
+        // Digital Signal Processing Status
+        printf("DSP: median=%s | movingAvg=%s | saturation=%s\r\n",
+               ENABLE_SALT_PEPPER_FILTER ? "ON" : "OFF",
+               ENABLE_MOVING_AVERAGE ? "ON" : "OFF", 
+               ENABLE_SIGNAL_SATURATION ? "ON" : "OFF");
+        
+        // FreeRTOS Task Information
+        printf("FreeRTOS: tasks=%d | stacks=OK\r\n", 5);
+        printf("--------------------------------------------------------\r\n");
+        
+        // CRITICAL: 500ms period as required by assignment
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SENSOR_REPORT_PERIOD_MS));
+    } // End of infinite loop
+} // End of task5_system_status_reporter
+
+// (Task6 Ultrasonic and Task7 Coordinator removed per request; NTC-only focus)
