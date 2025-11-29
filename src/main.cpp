@@ -1,49 +1,59 @@
-#include <Arduino.h> // Include Arduino core library for basic microcontroller functions
-#include <tasks.h> // Include custom tasks header file for RTOS task definitions
-#include <own_stdio.h> // Include custom stdio header file for input/output operations
+#include <Arduino.h>
+#include <relay_control.h>
+#include <lcd_display.h>
+#include <stdio_command.h>
+#include <keypad_input.h>
+
+static const unsigned long BAUDRATE = 115200;
 
 void setup() // Arduino setup function - runs once at startup
 { // Opening brace for setup function
-  Serial.begin(BAUDRATE); // Initialize serial communication with predefined baud rate
-  own_stdio_init(BAUDRATE); // Initialize custom stdio with the same baud rate
+  // Initialize relay, LCD, and STDIO command interface for lab 4.1
+  relay::init({22, true}); // D22, activeHigh
+  lcd::init(0x27, 16, 2);
+  cmd::init(BAUDRATE); // Initializes Serial
+  kpad::init(23,24,25,26, 27,28,29,30); // rows R1-R4, cols C1-C4
 
   // Print system initialization banner
   printf("\n");
   printf("======================================================\n");
-  printf("   DIGITAL SIGNAL PROCESSING SYSTEM FOR MCU\n");
+  printf("   RELAY CONTROL SYSTEM (Lab 4.1)\n");
   printf("======================================================\n");
   printf("Features:\n");
-  printf("- NTC Temperature Sensor with Digital Filtering\n");
-  // Ultrasonic sensor removed: NTC-only implementation per lab 3.2 focus
-  printf("- Salt & Pepper Filter (Median Filter)\n");
-  printf("- Weighted Moving Average Filter\n");
-  printf("- Signal Saturation and Conditioning\n");
-  printf("- FreeRTOS Task Scheduling (vTaskDelayUntil)\n");
-  printf("- STDIO Reporting Interface (500ms period)\n");
-  printf("- Modular Architecture for Reusability\n");
+  printf("- Relay ON/OFF via STDIO commands\n");
+  printf("- LCD status display (I2C)\n");
+  printf("- Modular hardware-software interfaces\n");
   printf("======================================================\n");
-  printf("Assignment Requirements: 100%% Implementation\n");
-  printf("- 50%%: Base application with sensor data display\n");
-  printf("- 10%%: Salt & Pepper digital filter\n");
-  printf("- 10%%: Weighted moving average filter\n");
-  printf("- 10%%: FreeRTOS tasks with periodic reporting\n");
-  // Optional additional sensor removed in this configuration
-  printf("- 10%%: Full physical demonstration ready\n");
+  printf("Assignment 4.1 focus: relay control & STDIO/LCD reporting\n");
   printf("======================================================\n\n");
 
-  // Initialize enhanced RTOS system with digital signal processing
-  rtos_tasks_init_enhanced(); // Call function to initialize enhanced FreeRTOS system
-
-  // Start FreeRTOS scheduler
-  printf("INIT: Starting FreeRTOS scheduler...\n");
-  vTaskStartScheduler(); // Start the FreeRTOS task scheduler to begin multitasking
+  // Minimal loop-based command processing for 4.1 (no RTOS required)
+  lcd::printLine(0, "Relay Control");
+  lcd::printLine(1, relay::isOn() ? "Relay: ON " : "Relay: OFF");
 } // Closing brace for setup function
 
 void loop() // Arduino main loop function - normally runs continuously
 { // Opening brace for loop function
-  // With running scheduler we usually don't return here
-  // Empty loop as tasks are handled by FreeRTOS scheduler
-  // If we reach here, it means scheduler failed to start
-  printf("ERROR: FreeRTOS scheduler failed to start!\n");
-  delay(1000);
+  // Poll Serial for commands and update LCD status
+  if (cmd::poll()) {
+    lcd::printLine(1, relay::isOn() ? "Relay: ON " : "Relay: OFF");
+  }
+  char key = kpad::poll();
+  if (key) {
+    if (key == 'A') {
+      relay::on();
+      lcd::printLine(1, "Relay: ON ");
+      Serial.println("OK: relay=ON (keypad)");
+    }
+    else if (key == 'B') {
+      relay::off();
+      lcd::printLine(1, "Relay: OFF");
+      Serial.println("OK: relay=OFF (keypad)");
+    }
+    else if (key == 'D') {
+      lcd::printLine(1, relay::isOn() ? "Relay: ON " : "Relay: OFF");
+      Serial.print("STATUS: relay=");
+      Serial.println(relay::isOn() ? "ON" : "OFF");
+    }
+  }
 } // Closing brace for loop function
