@@ -9,4 +9,7 @@
 
 void own_stdio_init(const uint32_t baudrate); // Initialize custom stdio (Serial + LCD + keypad)
 
+// Non-blocking keypad poll: returns key char or 0 if none
+char keypad_peek();
+
 #endif //OWN_STDIO_H // End of header guard

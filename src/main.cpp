@@ -1,49 +1,118 @@
-#include <Arduino.h> // Include Arduino core library for basic microcontroller functions
-#include <tasks.h> // Include custom tasks header file for RTOS task definitions
-#include <own_stdio.h> // Include custom stdio header file for input/output operations
+// Motor control application for Lab 4.2
+#include <Arduino.h>
+#include "own_stdio.h"
+#include "motor_control.h"
 
-void setup() // Arduino setup function - runs once at startup
-{ // Opening brace for setup function
-  Serial.begin(BAUDRATE); // Initialize serial communication with predefined baud rate
-  own_stdio_init(BAUDRATE); // Initialize custom stdio with the same baud rate
+static const unsigned long BAUD = 115200;
 
-  // Print system initialization banner
-  printf("\n");
-  printf("======================================================\n");
-  printf("   DIGITAL SIGNAL PROCESSING SYSTEM FOR MCU\n");
-  printf("======================================================\n");
-  printf("Features:\n");
-  printf("- NTC Temperature Sensor with Digital Filtering\n");
-  // Ultrasonic sensor removed: NTC-only implementation per lab 3.2 focus
-  printf("- Salt & Pepper Filter (Median Filter)\n");
-  printf("- Weighted Moving Average Filter\n");
-  printf("- Signal Saturation and Conditioning\n");
-  printf("- FreeRTOS Task Scheduling (vTaskDelayUntil)\n");
-  printf("- STDIO Reporting Interface (500ms period)\n");
-  printf("- Modular Architecture for Reusability\n");
-  printf("======================================================\n");
-  printf("Assignment Requirements: 100%% Implementation\n");
-  printf("- 50%%: Base application with sensor data display\n");
-  printf("- 10%%: Salt & Pepper digital filter\n");
-  printf("- 10%%: Weighted moving average filter\n");
-  printf("- 10%%: FreeRTOS tasks with periodic reporting\n");
-  // Optional additional sensor removed in this configuration
-  printf("- 10%%: Full physical demonstration ready\n");
-  printf("======================================================\n\n");
+// Default pins for Arduino Mega (can be changed)
+static const uint8_t MOTOR_PWM = 6; // PWM capable
+static const uint8_t MOTOR_IN1 = 7;
+static const uint8_t MOTOR_IN2 = 8;
 
-  // Initialize enhanced RTOS system with digital signal processing
-  rtos_tasks_init_enhanced(); // Call function to initialize enhanced FreeRTOS system
+// Reporting interval (ms)
+static const unsigned long REPORT_MS = 1000;
 
-  // Start FreeRTOS scheduler
-  printf("INIT: Starting FreeRTOS scheduler...\n");
-  vTaskStartScheduler(); // Start the FreeRTOS task scheduler to begin multitasking
-} // Closing brace for setup function
+static unsigned long lastReport = 0;
 
-void loop() // Arduino main loop function - normally runs continuously
-{ // Opening brace for loop function
-  // With running scheduler we usually don't return here
-  // Empty loop as tasks are handled by FreeRTOS scheduler
-  // If we reach here, it means scheduler failed to start
-  printf("ERROR: FreeRTOS scheduler failed to start!\n");
-  delay(1000);
-} // Closing brace for loop function
+// simple line buffer for Serial input
+static String lineBuf;
+
+void printStatus() {
+  int16_t p = motor::getPower();
+  const char* dir = (p > 0) ? "FWD" : (p < 0) ? "REV" : "STOP";
+  printf("MOTOR: power=%d%% dir=%s\n", p, dir);
+}
+
+void handleCommand(const String &s) {
+  String cmd = s;
+  cmd.trim();
+  cmd.toLowerCase();
+  if (cmd.startsWith("motor set")) {
+    int val = cmd.substring(9).toInt();
+    motor::setPower(val);
+    printf("OK: motor set %d\n", val);
+    printStatus();
+  } else if (cmd == "motor stop") {
+    motor::stop();
+    printf("OK: motor stop\n");
+    printStatus();
+  } else if (cmd == "motor max") {
+    motor::setMax();
+    printf("OK: motor max\n");
+    printStatus();
+  } else if (cmd == "motor inc") {
+    motor::inc();
+    printf("OK: motor inc\n");
+    printStatus();
+  } else if (cmd == "motor dec") {
+    motor::dec();
+    printf("OK: motor dec\n");
+    printStatus();
+  } else if (cmd == "status" || cmd == "motor status") {
+    printStatus();
+  } else {
+    printf("ERR: unknown command: %s\n", cmd.c_str());
+  }
+}
+
+void setup() {
+  own_stdio_init(BAUD);
+  motor::Config cfg;
+  cfg.pwmPin = MOTOR_PWM;
+  cfg.in1 = MOTOR_IN1;
+  cfg.in2 = MOTOR_IN2;
+  cfg.activeHigh = true;
+  motor::init(cfg);
+
+  printf("\n==============================================\n");
+  printf(" Motor control (Lab 4.2)\n");
+  printf(" Commands: motor set <n>, motor stop, motor max, motor inc, motor dec, status\n");
+  printf("==============================================\n");
+
+  lastReport = millis();
+}
+
+void loop() {
+  // Serial input line handling
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+    if (c == '\r' || c == '\n') {
+      if (lineBuf.length() > 0) {
+        handleCommand(lineBuf);
+        lineBuf = "";
+      }
+    } else {
+      lineBuf += c;
+      if (lineBuf.length() > 64) lineBuf = lineBuf.substring(0,64);
+    }
+  }
+
+  // keypad support (non-blocking)
+  char k = keypad_peek();
+  if (k) {
+    // simple mapping: A -> inc, B -> dec, D -> status, digits -> set immediate
+    if (k == 'A') { motor::inc(); printf("OK: motor inc (key)\n"); }
+    else if (k == 'B') { motor::dec(); printf("OK: motor dec (key)\n"); }
+    else if (k == 'D') { printStatus(); }
+    else if (k >= '0' && k <= '9') {
+      // read possible multi-digit: build small number via blocking keypad_getchar
+      int value = k - '0';
+      // try to read another key (simple, not robust)
+      char k2 = keypad_peek();
+      if (k2 >= '0' && k2 <= '9') {
+        value = value * 10 + (k2 - '0');
+      }
+      motor::setPower(value);
+      printf("OK: motor set %d (key)\n", value);
+      printStatus();
+    }
+  }
+
+  // periodic report
+  unsigned long now = millis();
+  if (now - lastReport >= REPORT_MS) {
+    printStatus();
+    lastReport = now;
+  }
+}

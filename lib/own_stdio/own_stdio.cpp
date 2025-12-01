@@ -40,6 +40,14 @@ int keypad_getchar(FILE *f) // getchar implementation using keypad input
     return key; // Return the pressed key code
 }
 
+// Non-blocking keypad poll: returns key or 0
+char keypad_peek()
+{
+    char k = kpd.getKey();
+    if (k == NO_KEY) return 0;
+    return k;
+}
+
 int lcd_putchar(char ch, FILE *f) // putchar implementation for LCD output
 {
     static uint8_t nr_of_displayed_chars = 0; // Track characters written in the current row
