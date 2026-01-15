@@ -14,6 +14,9 @@
 #define UP_BUTTON_PIN 3 // Define pin 3 for the up button
 #define DOWN_BUTTON_PIN 1 // Define pin 1 for the down button
 
+//Sensor pins
+#define TEMPERATURE_SENSOR_PIN A0 // Analog pin A0 for NTC temperature sensor
+
 //Keypad pins (4x4)
 #define KEYPAD_ROWS 4 // Define number of rows in the keypad (4 rows)
 #define KEYPAD_COLS 4 // Define number of columns in the keypad (4 columns)
@@ -72,5 +75,69 @@ enum KEYPAD_PINS // Enumeration to define keypad pin assignments
 // Provider/consumer queue parameters (bytes)
 #define QUEUE_LENGTH             32 // Define queue length as 32 items
 #define QUEUE_ITEM_SIZE          1 // Define queue item size as 1 byte
+
+// === УЛЬТРАЗВУКОВОЙ ДАТЧИК HC-SR04 ===
+#define ULTRASONIC_TRIGGER_PIN     7     // Пин триггера HC-SR04
+#define ULTRASONIC_ECHO_PIN        8     // Пин эхо HC-SR04  
+#define ULTRASONIC_MIN_DISTANCE_CM 2.0f  // Минимальное расстояние (см)
+#define ULTRASONIC_MAX_DISTANCE_CM 400.0f // Максимальное расстояние (см)
+#define ULTRASONIC_TIMEOUT_US      30000  // Таймаут измерения (мкс)
+#define ULTRASONIC_MAX_ERRORS      5      // Максимальное количество ошибок подряд
+#define ULTRASONIC_NAME            "HC-SR04 Ultrasonic" // Имя датчика для отчетов
+
+// === ЦИФРОВАЯ ОБРАБОТКА СИГНАЛОВ ===
+#define ENABLE_SALT_PEPPER_FILTER  1     // Включить фильтр "соль и перец" (медианный)
+#define ENABLE_MOVING_AVERAGE      1     // Включить взвешенный скользящий фильтр
+#define ENABLE_SATURATION          1     // Включить насыщение (ограничение диапазона)
+
+// === ПАРАМЕТРЫ NTC ДАТЧИКА ТЕМПЕРАТУРЫ ===
+#define TEMP_PULLUP_RESISTOR    10000.0f    // Подтягивающий резистор 10кОм
+#define TEMP_SENSOR_R25         10000.0f    // Сопротивление NTC при 25°C (10кОм)
+#define TEMP_SENSOR_T0          298.15f     // Температура 25°C в Кельвинах (298.15К)
+#define TEMP_SENSOR_BETA        3950.0f     // Бета-коэффициент NTC (3950К)
+#define TEMP_MIN_CELSIUS        -40.0f      // Минимальная температура диапазона
+#define TEMP_MAX_CELSIUS        125.0f      // Максимальная температура диапазона
+
+// === ЦИФРОВЫЕ ФИЛЬТРЫ И КОНДИЦИОНИРОВАНИЕ СИГНАЛА ===
+#define ENABLE_SALT_PEPPER_FILTER    1      // Включить фильтр "соль и перец" (медианный)
+#define ENABLE_MOVING_AVERAGE        1      // Включить взвешенный фильтр усреднения
+#define ENABLE_SIGNAL_SATURATION     1      // Включить насыщение сигнала
+
+// Параметры фильтра "соль и перец" (медианный фильтр)
+#define MEDIAN_FILTER_SIZE          5       // Размер окна медианного фильтра (должен быть нечетным)
+
+// Параметры взвешенного фильтра усреднения
+#define MOVING_AVERAGE_SIZE         8       // Размер окна взвешенного усреднения
+#define WEIGHT_DECAY_FACTOR         0.8f    // Фактор затухания для экспоненциальных весов
+
+// Параметры насыщения сигнала
+#define ADC_MIN_SATURATION          50      // Минимальное значение ADC (шумовой порог)
+#define ADC_MAX_SATURATION          1000    // Максимальное значение ADC (защита от переполнения)
+#define VOLTAGE_MIN_SATURATION      0.2f    // Минимальное напряжение (В)
+#define VOLTAGE_MAX_SATURATION      4.8f    // Максимальное напряжение (В)
+
+// (Ultrasonic sensor configuration removed: NTC-only implementation)
+
+// === ПЕРИОДЫ ЗАДАЧ FreeRTOS ===
+#define SENSOR_READ_PERIOD_MS       500     // Период чтения NTC датчика (500мс)
+#define SENSOR_REPORT_PERIOD_MS     500     // ОБЯЗАТЕЛЬНЫЙ период отчетности (500мс по заданию)
+#define SIGNAL_PROCESSING_PERIOD_MS 1000    // Период дополнительной обработки сигналов (if needed)
+
+// Задержки запуска и смещения задач (для правильного планирования)
+#define TASK_BASE_STARTUP_DELAY     50      // Базовая задержка запуска всех задач
+#define TASK4_STARTUP_OFFSET        0       // Задача чтения NTC - без смещения (опорная)
+#define TASK5_STARTUP_OFFSET        100     // Задача отчетности - смещение 100мс
+// NTC-only: remove ultrasonic/coordinator offsets
+
+// === ЗАДЕРЖКИ И СМЕЩЕНИЯ ЗАДАЧ ===
+#define TASK_STARTUP_DELAY_MS       50   // Базовая задержка запуска задач
+#define ULTRASONIC_STARTUP_DELAY    100  // Смещение для ультразвукового датчика
+#define PROCESSING_STARTUP_DELAY    75   // Смещение для задачи обработки сигналов
+#define MONITOR_STARTUP_DELAY       150  // Смещение для задачи мониторинга
+
+// === ОГРАНИЧЕНИЯ НАСЫЩЕНИЯ ===
+#define SENSOR_MIN_TEMP_SATURATION  -45.0f // Минимальная температура для насыщения
+#define SENSOR_MAX_TEMP_SATURATION  130.0f // Максимальная температура для насыщения
+
 #endif // End of header guard
 
